@@ -1,3 +1,4 @@
+import 'package:first_app/custom_dialog.dart';
 import 'package:flutter/material.dart';
 
 import 'game_button.dart';
@@ -9,6 +10,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<GameButton> buttonsList;
+  var player1;
+  var player2;
+  var activePlayer;
   
   @override
   void initState(){
@@ -17,6 +21,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<GameButton> doInit(){
+    player1 = new List();
+    player2 = new List();
+    activePlayer = 1;
+
     var gameButtons = <GameButton>[
       new GameButton(id: 1),
       new GameButton(id: 2),
@@ -31,36 +39,163 @@ class _HomePageState extends State<HomePage> {
     return gameButtons;
   }
 
+  void playGame(GameButton gb){
+    setState(() {
+      if(activePlayer == 1){
+        gb.text = "X";
+        gb.bg = Colors.red;
+        activePlayer = 2;
+        player1.add(gb.id);
+      }else{
+        gb.text = "O";
+        gb.bg = Colors.blue;
+        activePlayer = 1;
+        player2.add(gb.id);
+      }
+      gb.enabled = false;
+      int winner = checkWinner();
+      if(winner == -1){
+        if(buttonsList.every((p)=>p.text != "")){
+          showDialog(
+            context: context,
+            builder: (_) => CustomDialog("Game Over", "Press the reset button to start again.", resetGame)
+          );
+        }
+      }
+    });
+  }
+
+
+  int checkWinner(){
+    var winner = -1;
+    if (player1.contains(1) && player1.contains(2) && player1.contains(3)){
+      winner = 1;
+    }
+    if (player2.contains(1) && player2.contains(2) && player2.contains(3)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(4) && player1.contains(5) && player1.contains(6)){
+      winner = 1;
+    }
+    if (player2.contains(4) && player2.contains(5) && player2.contains(6)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(7) && player1.contains(8) && player1.contains(9)){
+      winner = 1;
+    }
+    if (player2.contains(7) && player2.contains(8) && player2.contains(9)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(1) && player1.contains(4) && player1.contains(7)){
+      winner = 1;
+    }
+    if (player2.contains(1) && player2.contains(4) && player2.contains(7)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(2) && player1.contains(5) && player1.contains(8)){
+      winner = 1;
+    }
+    if (player2.contains(2) && player2.contains(5) && player2.contains(8)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(3) && player1.contains(6) && player1.contains(9)){
+      winner = 1;
+    }
+    if (player2.contains(3) && player2.contains(6) && player2.contains(9)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(1) && player1.contains(5) && player1.contains(9)){
+      winner = 1;
+    }
+    if (player2.contains(1) && player2.contains(5) && player2.contains(9)){
+      winner = 2;
+    }
+
+    
+    if (player1.contains(3) && player1.contains(5) && player1.contains(7)){
+      winner = 1;
+    }
+    if (player2.contains(3) && player2.contains(5) && player2.contains(7)){
+      winner = 2;
+    }
+
+    if(winner != -1){
+      showDialog(
+        context: context,
+        builder: (_) => new CustomDialog("Player $winner Win!", "Press the reset button to start again.", resetGame)
+      );
+    }
+    return winner;
+  }
+
+  void resetGame(){
+    if(Navigator.canPop(context)){
+      Navigator.pop(context);
+    }
+    setState(() {
+      buttonsList = doInit();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Tic Tac Toe"),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(10.0),
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 9.0,
-          mainAxisSpacing: 9.0,
-        ),
-        itemCount: buttonsList.length,
-        itemBuilder: (context,i) => new SizedBox(
-          width: 100.0,
-          height: 100.0,
-          child: new RaisedButton(
-            padding: const EdgeInsets.all(8.0),
-            onPressed: null,
-            child: new Text(
-              buttonsList[i].text,
-              style: TextStyle(color: Colors.white, fontSize: 20.0),
+      body: new Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          new Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(10.0),
+              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 1.0,
+                crossAxisSpacing: 9.0,
+                mainAxisSpacing: 9.0,
+              ),
+              itemCount: buttonsList.length,
+              itemBuilder: (context,i) => new SizedBox(
+                width: 100.0,
+                height: 100.0,
+                child: new RaisedButton(
+                  padding: const EdgeInsets.all(8.0),
+                  onPressed: buttonsList[i].enabled?()=>playGame(buttonsList[i]):null,
+                  child: new Text(
+                    buttonsList[i].text,
+                    style: TextStyle(color: Colors.white, fontSize: 20.0),
+                  ),
+                  color: buttonsList[i].bg,
+                  disabledColor: buttonsList[i].bg,
+                )
+              ),
             ),
-            color: buttonsList[i].bg,
-            disabledColor: buttonsList[i].bg,
+          ),
+          new RaisedButton(
+            child: new Text(
+              "Reset",
+              style: TextStyle(color: Colors.white, fontSize: 20.0),
+              ),
+              color: Colors.lightBlueAccent,
+              padding: const EdgeInsets.all(20.0),
+              onPressed: resetGame,
           )
-        ),
-
+        ],
+        
       ),
     );
   }
